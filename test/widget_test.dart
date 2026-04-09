@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vespers/widgets/scripture_page.dart';
-import 'package:vespers/models/devotional.dart';
-import 'package:vespers/theme/vespers_theme.dart';
+import 'package:open_vespers/widgets/scripture_page.dart';
+import 'package:open_vespers/models/devotional.dart';
+import 'package:open_vespers/theme/vespers_theme.dart';
 
 void main() {
   group('ScripturePage', () {

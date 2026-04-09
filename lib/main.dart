@@ -16,7 +16,7 @@ class VespersApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Vespers',
+      title: 'Open Vespers',
       debugShowCheckedModeBanner: false,
       theme: VespersTheme.darkTheme,
       home: const DevotionalScreen(),

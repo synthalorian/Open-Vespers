@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vespers/services/devotional_engine.dart';
+import 'package:open_vespers/services/devotional_engine.dart';
 
 void main() {
   group('DevotionalEngine', () {
