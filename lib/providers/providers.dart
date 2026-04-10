@@ -8,6 +8,9 @@ final journalRepoProvider = Provider<JournalRepository>((ref) {
   return JournalRepository();
 });
 
+// Signal for saved events
+final lastSavedProvider = StateProvider<DateTime?>((ref) => null);
+
 // Today's devotional
 final todayDevotionalProvider = Provider<DailyDevotional>((ref) {
   return DevotionalEngine.getToday();
@@ -24,13 +27,14 @@ final currentEntryProvider =
     StateNotifierProvider<CurrentEntryNotifier, JournalEntry>((ref) {
   final repo = ref.read(journalRepoProvider);
   final devotional = ref.read(todayDevotionalProvider);
-  return CurrentEntryNotifier(repo, devotional);
+  return CurrentEntryNotifier(repo, ref, devotional);
 });
 
 class CurrentEntryNotifier extends StateNotifier<JournalEntry> {
   final JournalRepository _repo;
+  final Ref _ref;
 
-  CurrentEntryNotifier(this._repo, DailyDevotional devotional)
+  CurrentEntryNotifier(this._repo, this._ref, DailyDevotional devotional)
       : super(_loadOrCreate(_repo, devotional));
 
   static JournalEntry _loadOrCreate(
@@ -70,15 +74,35 @@ class CurrentEntryNotifier extends StateNotifier<JournalEntry> {
 
   Future<void> save() async {
     await _repo.save(state);
+    _ref.read(lastSavedProvider.notifier).state = DateTime.now();
   }
 }
 
 // All journal entries (sorted by date descending)
-final journalEntriesProvider = Provider<List<JournalEntry>>((ref) {
-  // Watch the current entry so list refreshes after save
-  ref.watch(currentEntryProvider);
-  return ref.read(journalRepoProvider).getAll();
+final journalEntriesProvider =
+    StateNotifierProvider<JournalEntriesNotifier, List<JournalEntry>>((ref) {
+  final repo = ref.read(journalRepoProvider);
+  // Refresh when lastSaved changes
+  ref.watch(lastSavedProvider);
+  return JournalEntriesNotifier(repo);
 });
+
+class JournalEntriesNotifier extends StateNotifier<List<JournalEntry>> {
+  final JournalRepository _repo;
+
+  JournalEntriesNotifier(this._repo) : super([]) {
+    refresh();
+  }
+
+  void refresh() {
+    state = _repo.getAll();
+  }
+
+  Future<void> delete(String id) async {
+    await _repo.delete(id);
+    refresh();
+  }
+}
 
 // Streak count
 final streakProvider = Provider<int>((ref) {
@@ -86,7 +110,62 @@ final streakProvider = Provider<int>((ref) {
   return ref.read(journalRepoProvider).getStreak();
 });
 
-// Available reading plans
-final availablePlansProvider = Provider<List<ReadingPlan>>((ref) {
-  return DevotionalEngine.availablePlans;
+// Available reading plans (with persistence)
+final availablePlansProvider =
+    StateNotifierProvider<PlansNotifier, List<ReadingPlan>>((ref) {
+  final repo = ref.read(journalRepoProvider);
+  return PlansNotifier(repo);
 });
+
+class PlansNotifier extends StateNotifier<List<ReadingPlan>> {
+  final JournalRepository _repo;
+
+  PlansNotifier(this._repo) : super([]) {
+    _init();
+  }
+
+  void _init() {
+    final savedPlans = _repo.getAllPlans();
+    final enginePlans = DevotionalEngine.availablePlans;
+
+    // Merge engine plans with saved progress
+    final merged = enginePlans.map((ep) {
+      final saved = savedPlans.where((sp) => sp.id == ep.id).firstOrNull;
+      if (saved != null) {
+        return ReadingPlan(
+          id: ep.id,
+          name: ep.name,
+          description: ep.description,
+          totalDays: ep.totalDays,
+          readings: ep.readings,
+          currentDay: saved.currentDay,
+          startDate: saved.startDate,
+        );
+      }
+      return ep;
+    }).toList();
+
+    state = merged;
+  }
+
+  Future<void> incrementDay(String planId) async {
+    state = [
+      for (final plan in state)
+        if (plan.id == planId)
+          ReadingPlan(
+            id: plan.id,
+            name: plan.name,
+            description: plan.description,
+            totalDays: plan.totalDays,
+            readings: plan.readings,
+            currentDay: (plan.currentDay + 1).clamp(0, plan.totalDays),
+            startDate: plan.startDate,
+          )
+        else
+          plan
+    ];
+
+    final updated = state.firstWhere((p) => p.id == planId);
+    await _repo.savePlan(updated);
+  }
+}

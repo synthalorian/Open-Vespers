@@ -2,25 +2,29 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/devotional.dart';
 
 class JournalRepository {
-  static const _boxName = 'journal_entries';
+  static const _journalBox = 'journal_entries';
+  static const _planBox = 'reading_plans';
 
   static Future<void> init() async {
     await Hive.initFlutter();
-    await Hive.openBox(_boxName);
+    await Hive.openBox(_journalBox);
+    await Hive.openBox(_planBox);
   }
 
-  Box get _box => Hive.box(_boxName);
+  Box get _jBox => Hive.box(_journalBox);
+  Box get _pBox => Hive.box(_planBox);
 
+  // Journal Methods
   Future<void> save(JournalEntry entry) async {
-    await _box.put(entry.id, entry.toMap());
+    await _jBox.put(entry.id, entry.toMap());
   }
 
   Future<void> delete(String id) async {
-    await _box.delete(id);
+    await _jBox.delete(id);
   }
 
   JournalEntry? get(String id) {
-    final data = _box.get(id);
+    final data = _jBox.get(id);
     if (data == null) return null;
     return JournalEntry.fromMap(Map<dynamic, dynamic>.from(data));
   }
@@ -35,13 +39,30 @@ class JournalRepository {
   }
 
   List<JournalEntry> getAll() {
-    return _box.values
+    return _jBox.values
         .map((data) => JournalEntry.fromMap(Map<dynamic, dynamic>.from(data)))
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
 
-  int get count => _box.length;
+  int get count => _jBox.length;
+
+  // Plan Methods
+  Future<void> savePlan(ReadingPlan plan) async {
+    await _pBox.put(plan.id, plan.toMap());
+  }
+
+  ReadingPlan? getPlan(String id) {
+    final data = _pBox.get(id);
+    if (data == null) return null;
+    return ReadingPlan.fromMap(Map<dynamic, dynamic>.from(data));
+  }
+
+  List<ReadingPlan> getAllPlans() {
+    return _pBox.values
+        .map((data) => ReadingPlan.fromMap(Map<dynamic, dynamic>.from(data)))
+        .toList();
+  }
 
   /// Get entries for a date range.
   List<JournalEntry> getRange(DateTime start, DateTime end) {

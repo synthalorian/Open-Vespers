@@ -26,10 +26,11 @@ class VespersTheme {
           foregroundColor: warmGold,
           elevation: 0,
         ),
-        cardTheme: CardTheme(
+        cardTheme: const CardThemeData(
           color: surface,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(

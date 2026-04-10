@@ -52,7 +52,7 @@ class _PrayerPageState extends ConsumerState<PrayerPage> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: VespersTheme.twilight.withOpacity(0.3),
+                color: VespersTheme.twilight.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(

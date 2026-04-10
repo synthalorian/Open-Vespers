@@ -1,5 +1,3 @@
-import 'package:hive/hive.dart';
-
 class ScriptureReading {
   final String reference;
   final String text;

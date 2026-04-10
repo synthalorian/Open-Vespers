@@ -43,13 +43,13 @@ class ReadingPlansScreen extends ConsumerWidget {
   }
 }
 
-class _PlanCard extends StatelessWidget {
+class _PlanCard extends ConsumerWidget {
   final ReadingPlan plan;
 
   const _PlanCard({required this.plan});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -62,7 +62,7 @@ class _PlanCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: VespersTheme.warmGold.withOpacity(0.1),
+                    color: VespersTheme.warmGold.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -150,26 +150,44 @@ class _PlanCard extends StatelessWidget {
                   color: VespersTheme.surfaceLight,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    const Text(
-                      'TODAY\'S READING',
-                      style: TextStyle(
-                        color: VespersTheme.warmGold,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'TODAY\'S READING',
+                            style: TextStyle(
+                              color: VespersTheme.warmGold,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            plan.todayReading!.reference,
+                            style: const TextStyle(
+                              color: VespersTheme.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      plan.todayReading!.reference,
-                      style: const TextStyle(
-                        color: VespersTheme.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                    IconButton(
+                      onPressed: () {
+                        ref
+                            .read(availablePlansProvider.notifier)
+                            .incrementDay(plan.id);
+                      },
+                      icon: const Icon(
+                        Icons.check_circle_outline,
+                        color: VespersTheme.warmGold,
                       ),
+                      tooltip: 'Mark Complete',
                     ),
                   ],
                 ),

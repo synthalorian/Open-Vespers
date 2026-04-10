@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../providers/providers.dart';
 import '../theme/vespers_theme.dart';
+import '../models/devotional.dart';
 
 class JournalHistoryScreen extends ConsumerWidget {
   const JournalHistoryScreen({super.key});
@@ -53,7 +55,7 @@ class JournalHistoryScreen extends ConsumerWidget {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: VespersTheme.warmGold.withOpacity(0.1),
+                          color: VespersTheme.warmGold.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Center(
@@ -95,6 +97,17 @@ class JournalHistoryScreen extends ConsumerWidget {
                             const Icon(Icons.volunteer_activism,
                                 size: 14, color: VespersTheme.warmGold),
                           ],
+                          const SizedBox(width: 10),
+                          IconButton(
+                            icon: const Icon(Icons.share_rounded,
+                                size: 18, color: VespersTheme.textSecondary),
+                            onPressed: () => _shareEntry(entry),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded,
+                                size: 18, color: Colors.redAccent),
+                            onPressed: () => _confirmDelete(context, ref, entry),
+                          ),
                         ],
                       ),
                       children: [
@@ -109,6 +122,45 @@ class JournalHistoryScreen extends ConsumerWidget {
                 }),
               ],
             ),
+    );
+  }
+
+  void _shareEntry(JournalEntry entry) {
+    String text = 'Vespers Journal - ${_formatDate(entry.date)}\n';
+    if (entry.scriptureReference.isNotEmpty) {
+      text += 'Scripture: ${entry.scriptureReference}\n';
+    }
+    if (entry.reflectionText.isNotEmpty) {
+      text += '\nReflection:\n${entry.reflectionText}\n';
+    }
+    if (entry.prayerText.isNotEmpty) {
+      text += '\nPrayer:\n${entry.prayerText}\n';
+    }
+    text += '\n— Shared from Open Vespers';
+
+    Share.share(text);
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, JournalEntry entry) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Entry'),
+        content: const Text('Are you sure you want to delete this journal entry?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () {
+              ref.read(journalEntriesProvider.notifier).delete(entry.id);
+              Navigator.pop(context);
+            },
+            child: const Text('DELETE', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
     );
   }
 

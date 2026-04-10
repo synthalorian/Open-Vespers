@@ -33,7 +33,7 @@ class ScripturePage extends StatelessWidget {
               color: VespersTheme.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: VespersTheme.warmGold.withOpacity(0.15),
+                color: VespersTheme.warmGold.withValues(alpha: 0.15),
               ),
             ),
             child: Column(
